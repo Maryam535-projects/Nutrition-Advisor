@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Nutrition Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            width: 100%;
+            max-width: 1000px;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .form-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .goals-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .goal-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .goal-card:hover {
+            transform: translateY(-5px);
+            border-color: #667eea;
+        }
+        
+        .goal-card.selected {
+            border-color: #667eea;
+            background: linear-gradient(45deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        }
+        
+        .goal-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .goal-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .goal-card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .analyze-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            display: block;
+            margin: 30px auto;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .analyze-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+        
+        .analyze-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result-container {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            border-left: 5px solid #667eea;
+            display: none;
+            animation: slideUp 0.5s ease;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-title {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        
+        .nutrition-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .nutrition-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .nutrient-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .nutrient-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .goal-display {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+        
+        .goal-display .goal-icon {
+            font-size: 2rem;
+            margin: 0;
+        }
+        
+        .recommendations {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .recommendations h3 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .recommendations ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .recommendations li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .recommendations li:last-child {
+            border-bottom: none;
+        }
+        
+        .diet-plan {
+            margin-top: 30px;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        }
+        
+        .diet-plan h3 {
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .week-days {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .day-plan {
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .day-plan h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .meal {
+            margin-bottom: 15px;
+        }
+        
+        .meal h5 {
+            color: #555;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .meal p {
+            color: #666;
+            font-size: 0.85rem;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #e0e0e0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            .form-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            .goals-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .week-days {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍎 AI Nutrition Analyzer</h1>
+        
+        <div class="form-container">
+            <div class="form-section">
+                <div class="input-group">
+                    <label for="age">Age</label>
+                    <input type="number" id="age" value="25" min="1" max="120">
+                </div>
+                
+                <div class="input-group">
+                    <label for="gender">Gender</label>
+                    <select id="gender">
+                        <option value="Male" selected>Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <div class="input-group">
+                    <label for="weight">Weight (kg)</label>
+                    <input type="number" id="weight" value="70" min="1" max="300">
+                </div>
+                
+                <div class="input-group">
+                    <label for="height">Height (cm)</label>
+                    <input type="number" id="height" value="170" min="50" max="300">
+                </div>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label for="activity">Activity Level</label>
+            <select id="activity">
+                <option value="Sedentary">Sedentary (little or no exercise)</option>
+                <option value="Lightly active">Lightly active (1-3 days/week)</option>
+                <option value="Moderately active" selected>Moderately active (3-5 days/week)</option>
+                <option value="Very active">Very active (6-7 days/week)</option>
+                <option value="Extremely active">Extremely active (athlete, physical job)</option>
+            </select>
+        </div>
+        
+        <div class="input-group">
+            <label>🎯 Select Your Goal</label>
+            <div class="goals-container">
+                <div class="goal-card" onclick="selectGoal('weight_loss')" data-goal="weight_loss">
+                    <div class="goal-icon">🏃‍♂️</div>
+                    <h3>Weight Loss</h3>
+                    <p>Lose fat and get lean</p>
+                </div>
+                
+                <div class="goal-card" onclick="selectGoal('muscle_gain')" data-goal="muscle_gain">
+                    <div class="goal-icon">💪</div>
+                    <h3>Muscle Gain</h3>
+                    <p>Build muscle mass</p>
+                </div>
+                
+                <div class="goal-card" onclick="selectGoal('maintenance')" data-goal="maintenance">
+                    <div class="goal-icon">⚖️</div>
+                    <h3>Maintenance</h3>
+                    <p>Maintain current weight</p>
+                </div>
+                
+                <div class="goal-card" onclick="selectGoal('healthy_living')" data-goal="healthy_living">
+                    <div class="goal-icon">🥗</div>
+                    <h3>Healthy Living</h3>
+                    <p>Overall health & wellness</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label for="food">🍽️ What did you eat today? (comma separated)</label>
+            <textarea id="food" placeholder="e.g., apple, banana, chicken breast, rice, broccoli, eggs, milk, bread">apple, banana, chicken breast, rice, broccoli</textarea>
+        </div>
+        
+        <button class="analyze-btn" id="analyzeBtn" onclick="analyzeFood()">
+            🔍 Analyze with AI
+        </button>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing your nutrition data with AI...</p>
+        </div>
+        
+        <div class="result-container" id="resultContainer">
+            <div class="tab-container">
+                <div class="tab active" onclick="switchTab('analysis')">📊 Analysis</div>
+                <div class="tab" onclick="switchTab('diet')">📅 Weekly Plan</div>
+            </div>
+            
+            <div id="analysisTab" class="tab-content active">
+                <h2 class="result-title">📊 Your Nutrition Analysis</h2>
+                
+                <div class="goal-display" id="goalDisplay">
+                    <div class="goal-icon" id="selectedGoalIcon">🎯</div>
+                    <div>
+                        <h3 id="selectedGoalTitle">Goal: Weight Loss</h3>
+                        <p id="selectedGoalDesc">Calorie deficit with high protein</p>
+                    </div>
+                </div>
+                
+                <div class="nutrition-grid">
+                    <div class="nutrition-card">
+                        <div class="nutrient-value" id="calories">0</div>
+                        <div class="nutrient-label">Calories</div>
+                    </div>
+                    <div class="nutrition-card">
+                        <div class="nutrient-value" id="protein">0g</div>
+                        <div class="nutrient-label">Protein</div>
+                    </div>
+                    <div class="nutrition-card">
+                        <div class="nutrient-value" id="carbs">0g</div>
+                        <div class="nutrient-label">Carbs</div>
+                    </div>
+                    <div class="nutrition-card">
+                        <div class="nutrient-value" id="fat">0g</div>
+                        <div class="nutrient-label">Fat</div>
+                    </div>
+                </div>
+                
+                <div class="recommendations">
+                    <h3>💡 AI Recommendations</h3>
+                    <ul id="recommendationsList">
+                        <!-- Recommendations will appear here -->
+                    </ul>
+                </div>
+            </div>
+            
+            <div id="dietTab" class="tab-content">
+                <h2 class="result-title">📅 Weekly Diet Plan</h2>
+                
+                <div class="goal-display">
+                    <div class="goal-icon" id="planGoalIcon">🎯</div>
+                    <div>
+                        <h3>Customized for: <span id="planGoalText">Weight Loss</span></h3>
+                        <p id="planGoalDetails">Based on your age, weight, activity level and goal</p>
+                    </div>
+                </div>
+                
+                <div class="diet-plan">
+                    <h3>🍽️ 7-Day Meal Plan</h3>
+                    <div class="week-days" id="weekPlan">
+                        <!-- Weekly plan will be generated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample food database with nutritional values
+        const foodDatabase = {
+            'apple': { calories: 52, protein: 0.3, carbs: 14, fat: 0.2 },
+            'banana': { calories: 89, protein: 1.1, carbs: 23, fat: 0.3 },
+            'chicken breast': { calories: 165, protein: 31, carbs: 0, fat: 3.6 },
+            'rice': { calories: 130, protein: 2.7, carbs: 28, fat: 0.3 },
+            'broccoli': { calories: 34, protein: 2.8, carbs: 7, fat: 0.4 },
+            'eggs': { calories: 155, protein: 13, carbs: 1.1, fat: 11 },
+            'milk': { calories: 42, protein: 3.4, carbs: 5, fat: 1 },
+            'bread': { calories: 265, protein: 9, carbs: 49, fat: 3.2 },
+            'pasta': { calories: 131, protein: 5, carbs: 25, fat: 1.1 },
+            'salmon': { calories: 208, protein: 20, carbs: 0, fat: 13 },
+            'spinach': { calories: 23, protein: 2.9, carbs: 3.6, fat: 0.4 },
+            'yogurt': { calories: 59, protein: 10, carbs: 3.6, fat: 0.4 },
+            'nuts': { calories: 607, protein: 20, carbs: 21, fat: 54 },
+            'cheese': { calories: 402, protein: 25, carbs: 1.3, fat: 33 },
+            'potato': { calories: 77, protein: 2, carbs: 17, fat: 0.1 }
+        };
+
+        // Activity level multipliers
+        const activityMultipliers = {
+            'Sedentary': 1.2,
+            'Lightly active': 1.375,
+            'Moderately active': 1.55,
+            'Very active': 1.725,
+            'Extremely active': 1.9
+        };
+
+        // Goal configurations
+        const goalConfigs = {
+            'weight_loss': {
+                name: 'Weight Loss',
+                icon: '🏃‍♂️',
+                description: 'Calorie deficit with high protein',
+                calorieAdjustment: -500,
+                proteinMultiplier: 2.2,
+                carbMultiplier: 0.8,
+                fatMultiplier: 0.9
+            },
+            'muscle_gain': {
+                name: 'Muscle Gain',
+                icon: '💪',
+                description: 'Calorie surplus with high protein',
+                calorieAdjustment: 300,
+                proteinMultiplier: 2.5,
+                carbMultiplier: 1.3,
+                fatMultiplier: 1.0
+            },
+            'maintenance': {
+                name: 'Maintenance',
+                icon: '⚖️',
+                description: 'Balance calories with nutrients',
+                calorieAdjustment: 0,
+                proteinMultiplier: 1.8,
+                carbMultiplier: 1.0,
+                fatMultiplier: 1.0
+            },
+            'healthy_living': {
+                name: 'Healthy Living',
+                icon: '🥗',
+                description: 'Nutrient-dense balanced diet',
+                calorieAdjustment: -200,
+                proteinMultiplier: 1.6,
+                carbMultiplier: 1.1,
+                fatMultiplier: 0.9
+            }
+        };
+
+        // Weekly meal plans for each goal
+        const weeklyPlans = {
+            'weight_loss': {
+                monday: [
+                    { meal: 'Breakfast', items: 'Oatmeal with berries, Green tea' },
+                    { meal: 'Lunch', items: 'Grilled chicken salad, Quinoa' },
+                    { meal: 'Dinner', items: 'Baked fish, Steamed vegetables' },
+                    { meal: 'Snack', items: 'Greek yogurt, Apple' }
+                ],
+                tuesday: [
+                    { meal: 'Breakfast', items: 'Egg white omelette, Whole grain toast' },
+                    { meal: 'Lunch', items: 'Lentil soup, Mixed greens' },
+                    { meal: 'Dinner', items: 'Turkey meatballs, Zucchini noodles' },
+                    { meal: 'Snack', items: 'Handful of almonds' }
+                ],
+                wednesday: [
+                    { meal: 'Breakfast', items: 'Protein smoothie, Chia seeds' },
+                    { meal: 'Lunch', items: 'Tuna salad, Whole wheat bread' },
+                    { meal: 'Dinner', items: 'Grilled shrimp, Asparagus' },
+                    { meal: 'Snack', items: 'Cucumber slices, Hummus' }
+                ],
+                thursday: [
+                    { meal: 'Breakfast', items: 'Greek yogurt, Mixed berries' },
+                    { meal: 'Lunch', items: 'Chicken stir-fry, Brown rice' },
+                    { meal: 'Dinner', items: 'Lean beef, Broccoli' },
+                    { meal: 'Snack', items: 'Protein bar' }
+                ],
+                friday: [
+                    { meal: 'Breakfast', items: 'Scrambled eggs, Avocado' },
+                    { meal: 'Lunch', items: 'Salmon, Sweet potato' },
+                    { meal: 'Dinner', items: 'Turkey burger, Salad' },
+                    { meal: 'Snack', items: 'Cottage cheese' }
+                ],
+                saturday: [
+                    { meal: 'Breakfast', items: 'Protein pancakes, Maple syrup' },
+                    { meal: 'Lunch', items: 'Chicken wrap, Lettuce' },
+                    { meal: 'Dinner', items: 'Baked cod, Roasted vegetables' },
+                    { meal: 'Snack', items: 'Dark chocolate (1-2 squares)' }
+                ],
+                sunday: [
+                    { meal: 'Breakfast', items: 'Omelette, Spinach, Feta cheese' },
+                    { meal: 'Lunch', items: 'Beef stew, Vegetables' },
+                    { meal: 'Dinner', items: 'Grilled chicken, Cauliflower rice' },
+                    { meal: 'Snack', items: 'Fruit salad' }
+                ]
+            },
+            'muscle_gain': {
+                monday: [
+                    { meal: 'Breakfast', items: '6 Egg omelette, Oatmeal, Banana' },
+                    { meal: 'Lunch', items: 'Chicken breast, Brown rice, Broccoli' },
+                    { meal: 'Dinner', items: 'Salmon, Quinoa, Green beans' },
+                    { meal: 'Snack', items: 'Protein shake, Peanut butter' }
+                ],
+                tuesday: [
+                    { meal: 'Breakfast', items: 'Protein pancakes, Greek yogurt, Honey' },
+                    { meal: 'Lunch', items: 'Lean beef, Sweet potato, Salad' },
+                    { meal: 'Dinner', items: 'Tuna steak, Pasta, Asparagus' },
+                    { meal: 'Snack', items: 'Cottage cheese, Almonds' }
+                ],
+                wednesday: [
+                    { meal: 'Breakfast', items: 'Scrambled eggs, Whole grain toast, Avocado' },
+                    { meal: 'Lunch', items: 'Turkey, Rice, Mixed vegetables' },
+                    { meal: 'Dinner', items: 'Chicken thighs, Potatoes, Carrots' },
+                    { meal: 'Snack', items: 'Mass gainer shake' }
+                ],
+                thursday: [
+                    { meal: 'Breakfast', items: 'Protein smoothie, Oats, Berries' },
+                    { meal: 'Lunch', items: 'Steak, Quinoa, Spinach' },
+                    { meal: 'Dinner', items: 'Fish fillet, Rice, Peas' },
+                    { meal: 'Snack', items: 'Greek yogurt, Granola' }
+                ],
+                friday: [
+                    { meal: 'Breakfast', items: 'Breakfast burrito, Sausage, Cheese' },
+                    { meal: 'Lunch', items: 'Chicken pasta, Garlic bread' },
+                    { meal: 'Dinner', items: 'Pork chops, Mashed potatoes, Corn' },
+                    { meal: 'Snack', items: 'Protein bar, Milk' }
+                ],
+                saturday: [
+                    { meal: 'Breakfast', items: 'Full English breakfast' },
+                    { meal: 'Lunch', items: 'Beef burger, Fries, Salad' },
+                    { meal: 'Dinner', items: 'BBQ chicken, Baked beans, Coleslaw' },
+                    { meal: 'Snack', items: 'Ice cream, Nuts' }
+                ],
+                sunday: [
+                    { meal: 'Breakfast', items: 'French toast, Bacon, Maple syrup' },
+                    { meal: 'Lunch', items: 'Roast chicken, Potatoes, Vegetables' },
+                    { meal: 'Dinner', items: 'Meatloaf, Gravy, Mash' },
+                    { meal: 'Snack', items: 'Casein protein, Banana' }
+                ]
+            }
+        };
+
+        let selectedGoal = 'weight_loss';
+
+        function selectGoal(goal) {
+            selectedGoal = goal;
+            
+            // Remove selected class from all cards
+            document.querySelectorAll('.goal-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked card
+            event.currentTarget.classList.add('selected');
+        }
+
+        function switchTab(tabName) {
+            // Update tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Activate selected tab
+            event.currentTarget.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // If switching to diet tab, generate plan
+            if (tabName === 'diet') {
+                generateWeeklyPlan();
+            }
+        }
+
+        function analyzeFood() {
+            // Show loading, hide button
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('analyzeBtn').style.display = 'none';
+            
+            // Get user data
+            const age = parseInt(document.getElementById('age').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+            const height = parseFloat(document.getElementById('height').value);
+            const gender = document.getElementById('gender').value;
+            const activity = document.getElementById('activity').value;
+            const foodInput = document.getElementById('food').value.toLowerCase();
+            
+            // Parse food items
+            const foodItems = foodInput.split(',')
+                .map(item => item.trim())
+                .filter(item => item.length > 0);
+            
+            // Simulate AI processing delay
+            setTimeout(() => {
+                // Calculate nutrition
+                const nutrition = calculateNutrition(foodItems);
+                
+                // Calculate BMR and daily needs
+                const bmr = calculateBMR(age, gender, weight, height);
+                const baseCalories = Math.round(bmr * activityMultipliers[activity]);
+                
+                // Get goal configuration
+                const goalConfig = goalConfigs[selectedGoal];
+                
+                // Adjust calories based on goal
+                const dailyCalories = baseCalories + goalConfig.calorieAdjustment;
+                
+                // Calculate target macros based on goal
+                const targetProtein = Math.round((weight * goalConfig.proteinMultiplier) * 10) / 10;
+                const targetCarbs = Math.round(((dailyCalories * 0.4) / 4) * goalConfig.carbMultiplier / 10) * 10;
+                const targetFat = Math.round(((dailyCalories * 0.25) / 9) * goalConfig.fatMultiplier);
+                
+                // Get recommendations
+                const recommendations = generateRecommendations(
+                    nutrition, dailyCalories, gender, age, goalConfig
+                );
+                
+                // Update goal display
+                document.getElementById('selectedGoalIcon').textContent = goalConfig.icon;
+                document.getElementById('selectedGoalTitle').textContent = `Goal: ${goalConfig.name}`;
+                document.getElementById('selectedGoalDesc').textContent = goalConfig.description;
+                
+                // Display results
+                displayResults({
+                    calories: nutrition.calories,
+                    protein: nutrition.protein,
+                    carbs: nutrition.carbs,
+                    fat: nutrition.fat,
+                    dailyNeeds: dailyCalories,
+                    targetProtein: targetProtein,
+                    targetCarbs: targetCarbs,
+                    targetFat: targetFat,
+                    recommendations: recommendations,
+                    goalConfig: goalConfig
+                });
+                
+                // Hide loading, show results
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('resultContainer').style.display = 'block';
+                document.getElementById('analyzeBtn').style.display = 'block';
+                
+            }, 2000);
+        }
+
+        function calculateNutrition(foodItems) {
+            let totalCalories = 0;
+            let totalProtein = 0;
+            let totalCarbs = 0;
+            let totalFat = 0;
+            
+            foodItems.forEach(item => {
+                // Check if food is in database (add if not)
+                const foodName = Object.keys(foodDatabase).find(
+                    key => item.includes(key) || key.includes(item)
+                ) || 'apple'; // Default to apple if not found
+                
+                const foodData = foodDatabase[foodName] || foodDatabase['apple'];
+                
+                // Add to totals (assuming 1 serving)
+                totalCalories += foodData.calories;
+                totalProtein += foodData.protein;
+                totalCarbs += foodData.carbs;
+                totalFat += foodData.fat;
+            });
+            
+            return {
+                calories: Math.round(totalCalories),
+                protein: Math.round(totalProtein * 10) / 10,
+                carbs: Math.round(totalCarbs * 10) / 10,
+                fat: Math.round(totalFat * 10) / 10
+            };
+        }
+
+        function calculateBMR(age, gender, weight, height) {
+            // Mifflin-St Jeor Equation
+            if (gender === 'Male') {
+                return 10 * weight + 6.25 * height - 5 * age + 5;
+            } else {
+                return 10 * weight + 6.25 * height - 5 * age - 161;
+            }
+        }
+
+        function generateRecommendations(nutrition, dailyNeeds, gender, age, goalConfig) {
+            const recommendations = [];
+            const proteinNeed = gender === 'Male' ? 56 : 46;
+            const calorieDiff = dailyNeeds - nutrition.calories;
+            
+            // Goal-specific recommendations
+            if (goalConfig.name === 'Weight Loss') {
+                recommendations.push('Create a calorie deficit of 300-500 calories daily.');
+                recommendations.push('Increase protein intake to preserve muscle mass.');
+                recommendations.push('Include high-fiber foods to stay full longer.');
+                recommendations.push('Avoid sugary drinks and processed snacks.');
+            } else if (goalConfig.name === 'Muscle Gain') {
+                recommendations.push('Ensure calorie surplus with quality foods.');
+                recommendations.push('Consume protein within 30 minutes post-workout.');
+                recommendations.push('Eat every 3-4 hours to maintain positive nitrogen balance.');
+                recommendations.push('Prioritize complex carbs for sustained energy.');
+            } else if (goalConfig.name === 'Maintenance') {
+                recommendations.push('Balance calorie intake with expenditure.');
+                recommendations.push('Focus on nutrient timing around workouts.');
+                recommendations.push('Include variety in your diet for micronutrients.');
+                recommendations.push('Stay consistent with your eating schedule.');
+            } else {
+                recommendations.push('Focus on whole, unprocessed foods.');
+                recommendations.push('Include a rainbow of fruits and vegetables.');
+                recommendations.push('Stay hydrated with water throughout the day.');
+                recommendations.push('Practice mindful eating habits.');
+            }
+            
+            // Calorie-based recommendations
+            if (calorieDiff > 500) {
+                recommendations.push('Your calorie intake is low. Consider adding healthy snacks.');
+            } else if (calorieDiff < -500) {
+                recommendations.push('You may be consuming more calories than needed.');
+            }
+            
+            // Protein recommendations
+            if (nutrition.protein < proteinNeed * 0.8) {
+                recommendations.push('Increase protein with chicken, fish, eggs, or lentils.');
+            } else if (nutrition.protein > proteinNeed * 1.3) {
+                recommendations.push('Your protein intake is high. Balance with carbs and fats.');
+            }
+            
+            // General health recommendations
+            recommendations.push('Include more colorful vegetables for vitamins.');
+            recommendations.push('Stay hydrated with at least 8 glasses of water daily.');
+            
+            // Age-specific advice
+            if (age > 50) {
+                recommendations.push('Ensure adequate calcium and vitamin D for bone health.');
+            }
+            
+            return recommendations;
+        }
+
+        function displayResults(data) {
+            // Update nutrition values with animation
+            animateValue('calories', 0, data.calories, 1000);
+            animateValue('protein', 0, data.protein, 1000);
+            animateValue('carbs', 0, data.carbs, 1000);
+            animateValue('fat', 0, data.fat, 1000);
+            
+            // Display recommendations
+            const list = document.getElementById('recommendationsList');
+            list.innerHTML = '';
+            data.recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.innerHTML = `✓ ${rec}`;
+                list.appendChild(li);
+            });
+            
+            // Update goal info for diet plan tab
+            document.getElementById('planGoalIcon').textContent = data.goalConfig.icon;
+            document.getElementById('planGoalText').textContent = data.goalConfig.name;
+            document.getElementById('planGoalDetails').textContent = 
+                `Target: ${data.dailyNeeds} calories, ${data.targetProtein}g protein`;
+        }
+
+        function generateWeeklyPlan() {
+            const planContainer = document.getElementById('weekPlan');
+            planContainer.innerHTML = '';
+            
+            // Get plan for selected goal (default to weight loss if not available)
+            const plan = weeklyPlans[selectedGoal] || weeklyPlans['weight_loss'];
+            const goalConfig = goalConfigs[selectedGoal];
+            
+            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            
+            days.forEach((day, index) => {
+                const dayPlan = document.createElement('div');
+                dayPlan.className = 'day-plan';
+                
+                let mealsHTML = `<h4>${dayNames[index]}</h4>`;
+                
+                if (plan[day]) {
+                    plan[day].forEach(meal => {
+                        mealsHTML += `
+                            <div class="meal">
+                                <h5>${meal.meal}</h5>
+                                <p>${meal.items}</p>
+                            </div>
+                        `;
+                    });
+                } else {
+                    // Generate generic plan if specific day not found
+                    mealsHTML += `
+                        <div class="meal">
+                            <h5>Breakfast</h5>
+                            <p>Protein-rich breakfast based on ${goalConfig.name.toLowerCase()} goal</p>
+                        </div>
+                        <div class="meal">
+                            <h5>Lunch</h5>
+                            <p>Balanced meal with lean protein and complex carbs</p>
+                        </div>
+                        <div class="meal">
+                            <h5>Dinner</h5>
+                            <p>Light dinner with vegetables and protein</p>
+                        </div>
+                        <div class="meal">
+                            <h5>Snack</h5>
+                            <p>Healthy snack option</p>
+                        </div>
+                    `;
+                }
+                
+                dayPlan.innerHTML = mealsHTML;
+                planContainer.appendChild(dayPlan);
+            });
+        }
+
+        function animateValue(id, start, end, duration) {
+            const element = document.getElementById(id);
+            const range = end - start;
+            const startTime = performance.now();
+            
+            function updateValue(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const value = start + (range * progress);
+                
+                if (id === 'calories') {
+                    element.textContent = Math.round(value);
+                } else {
+                    element.textContent = Math.round(value * 10) / 10 + 'g';
+                }
+                
+                if (progress < 1) {
+                    requestAnimationFrame(updateValue);
+                }
+            }
+            
+            requestAnimationFrame(updateValue);
+        }
+
+        // Initialize with weight loss selected
+        window.onload = function() {
+            document.querySelector('[data-goal="weight_loss"]').classList.add('selected');
+        };
+    </script>
+</body>
+</html>
